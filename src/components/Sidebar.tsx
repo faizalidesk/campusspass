@@ -21,7 +21,7 @@ import {
   ShieldCheck,
   UserCheck
 } from 'lucide-react';
-import { getPermits, getCurrentUser } from '@/lib/dataStore';
+import { getPermits, getCurrentUser, logout } from '@/lib/dataStore';
 
 interface SidebarProps {
   userRole?: 'admin' | 'ormawa';
@@ -245,13 +245,17 @@ export default function Sidebar({ userRole = 'ormawa', onCloseMobile }: SidebarP
           </Link>
 
           {/* Logout Button */}
-          <Link
-            href="/login"
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              window.location.href = '/login';
+            }}
             title="Keluar / Ganti Akun"
-            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition flex-shrink-0"
+            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition flex-shrink-0 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </div>
     </aside>

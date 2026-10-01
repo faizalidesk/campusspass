@@ -144,9 +144,9 @@ const STORAGE_KEY_BALASAN = 'campuspass_balasan';
 const STORAGE_KEY_USER = 'campuspass_current_user';
 const STORAGE_KEY_LOGS = 'campuspass_activity_logs';
 
-export function getCurrentUser(): User {
+export function getCurrentUser(): User | null {
   if (typeof window === 'undefined') {
-    return DEFAULT_ORMAWA;
+    return null;
   }
   const saved = localStorage.getItem(STORAGE_KEY_USER);
   if (saved) {
@@ -156,14 +156,22 @@ export function getCurrentUser(): User {
       // fallback
     }
   }
-  return DEFAULT_ORMAWA;
+  return null;
 }
 
-export function setCurrentUser(user: User) {
+export function setCurrentUser(user: User | null) {
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+    if (user) {
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(STORAGE_KEY_USER);
+    }
     window.dispatchEvent(new Event('campuspass_auth_change'));
   }
+}
+
+export function logout() {
+  setCurrentUser(null);
 }
 
 export async function getPermits(): Promise<PermitApplication[]> {

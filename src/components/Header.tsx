@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getCurrentUser, setCurrentUser, DEFAULT_ADMIN, DEFAULT_ORMAWA, getPermits } from '@/lib/dataStore';
+import { getCurrentUser, setCurrentUser, logout, DEFAULT_ADMIN, DEFAULT_ORMAWA, getPermits } from '@/lib/dataStore';
 import { User, PermitApplication } from '@/types';
 import {
   Bell,
@@ -241,13 +241,17 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   <RefreshCw className="w-4 h-4" /> Beralih ke {isAdmin ? 'Mahasiswa' : 'Admin'}
                 </button>
                 <div className="border-t border-slate-100 my-1"></div>
-                <Link
-                  href="/login"
-                  onClick={() => setShowUserDropdown(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    setShowUserDropdown(false);
+                    window.location.href = '/login';
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition text-left cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" /> Ganti Akun / Keluar
-                </Link>
+                </button>
               </div>
             </div>
           )}
