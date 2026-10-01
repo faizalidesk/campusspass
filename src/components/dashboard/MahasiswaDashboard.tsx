@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { PermitApplication, User } from '@/types';
 import {
@@ -13,14 +13,11 @@ import {
   Search,
   Download,
   Eye,
-  Calendar,
-  Building2,
   AlertCircle,
   FileSpreadsheet,
   Check,
-  ChevronRight,
   Sparkles,
-  MapPin
+  Inbox
 } from 'lucide-react';
 
 interface MahasiswaDashboardProps {
@@ -33,16 +30,23 @@ export default function MahasiswaDashboard({ user, permits, onRefresh }: Mahasis
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPermit, setSelectedPermit] = useState<PermitApplication | null>(null);
 
-  // Filter permits for current ormawa or all if demo
+  // Filter permits strictly for the current logged-in student / ormawa
   const userPermits = permits.filter((p) => {
-    if (!user?.ormawa_name) return true;
-    const normalizedUserOrmawa = user.ormawa_name.toLowerCase();
-    const normalizedPermitOrmawa = p.namaormawa.toLowerCase();
-    return (
-      normalizedPermitOrmawa.includes(normalizedUserOrmawa) ||
-      normalizedUserOrmawa.includes(normalizedPermitOrmawa) ||
-      true // show all permits for demo richness
-    );
+    if (!user) return false;
+    const userOrmawa = (user.ormawa_name || '').trim().toLowerCase();
+    const userName = (user.nama || '').trim().toLowerCase();
+    const permitOrmawa = (p.namaormawa || '').trim().toLowerCase();
+    const permitPJ = (p.penanggung_jawab || '').trim().toLowerCase();
+
+    if (userOrmawa && permitOrmawa) {
+      if (permitOrmawa === userOrmawa || permitOrmawa.includes(userOrmawa) || userOrmawa.includes(permitOrmawa)) {
+        return true;
+      }
+    }
+    if (userName && permitPJ && (permitPJ.includes(userName) || userName.includes(permitPJ))) {
+      return true;
+    }
+    return false;
   });
 
   const totalIzin = userPermits.length;
@@ -68,7 +72,9 @@ export default function MahasiswaDashboard({ user, permits, onRefresh }: Mahasis
           <div className="max-w-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-indigo-100 text-xs font-semibold mb-3 border border-white/20">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Portal Organisasi Mahasiswa &bull; Semester Genap 2026</span>
+              <span>
+                {user?.ormawa_name || 'Organisasi Mahasiswa'} &bull; Semester Genap 2026
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
               Halo, {user?.nama || 'Pengurus Ormawa'}! 👋
@@ -97,7 +103,7 @@ export default function MahasiswaDashboard({ user, permits, onRefresh }: Mahasis
         </div>
       </div>
 
-      {/* 2. 4 Modern SaaS KPI Cards */}
+      {/* 2. 4 Modern SaaS KPI Cards (Strictly for this user) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between">
@@ -112,7 +118,7 @@ export default function MahasiswaDashboard({ user, permits, onRefresh }: Mahasis
             <span className="text-3xl font-black text-slate-900">{totalIzin}</span>
             <span className="text-xs font-semibold text-slate-400">Kegiatan</span>
           </div>
-          <p className="mt-2 text-xs text-slate-500">Semua riwayat pengajuan kegiatan</p>
+          <p className="mt-2 text-xs text-slate-500">Semua riwayat pengajuan kegiatan Anda</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md transition">
@@ -163,20 +169,20 @@ export default function MahasiswaDashboard({ user, permits, onRefresh }: Mahasis
           <div className="mt-4 flex items-baseline gap-2">
             <span className="text-3xl font-black text-slate-900">{totalDitolak}</span>
             <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
-              Lihat Catatan
+              Catatan
             </span>
           </div>
           <p className="mt-2 text-xs text-slate-500">Perlu penyesuaian jadwal atau berkas</p>
         </div>
       </div>
 
-      {/* 3. Live Tracker Step Pipeline (Visual Stepper) */}
-      {latestPending && (
+      {/* 3. Live Tracker Step Pipeline (Visual Stepper or Empty State) */}
+      {latestPending ? (
         <div className="p-6 rounded-3xl bg-white border border-slate-200/80 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-100">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#6666FF]">
-                Live Tracker Status Pengajuan
+                Live Tracker Status Pengajuan Terkini
               </span>
               <h3 className="text-lg font-bold text-slate-900">{latestPending.namakegiatan}</h3>
               <p className="text-xs text-slate-500">
@@ -276,30 +282,52 @@ export default function MahasiswaDashboard({ user, permits, onRefresh }: Mahasis
             </div>
           )}
         </div>
+      ) : (
+        /* Empty State for Tracker when user has no submissions */
+        <div className="p-8 rounded-3xl bg-white border border-slate-200/80 shadow-sm text-center">
+          <div className="w-14 h-14 bg-indigo-50 text-[#6666FF] rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Inbox className="w-7 h-7 opacity-80" />
+          </div>
+          <h3 className="text-base font-bold text-slate-900">Belum Ada Pengajuan Kegiatan Aktif</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4 leading-relaxed">
+            Akun Anda belum memiliki permohonan perizinan yang sedang berjalan. Buat pengajuan proposal kegiatan pertama Anda sekarang.
+          </p>
+          <Link
+            href="/izin"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#6666FF] text-white font-bold text-xs shadow-md shadow-indigo-100 hover:bg-indigo-600 transition cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4" />
+            <span>Mulai Ajukan Izin Kegiatan</span>
+          </Link>
+        </div>
       )}
 
       {/* 4. Active Submissions Table */}
       <div className="rounded-3xl bg-white border border-slate-200/80 shadow-sm p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Daftar Permohonan Kegiatan Mahasiswa</h2>
+            <h2 className="text-lg font-bold text-slate-900">
+              Daftar Kegiatan {user?.ormawa_name || 'Organisasi Mahasiswa'}
+            </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Klik pada baris kegiatan untuk melihat detail lengkap dan surat izin
+              Riwayat pengajuan proposal dan status surat perizinan dari akun Anda
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Cari acara / kategori..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 h-10 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6666FF] w-56 transition"
-              />
+          {userPermits.length > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Cari acara / kategori..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 pr-4 h-10 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6666FF] w-56 transition"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Responsive Table */}
@@ -318,8 +346,12 @@ export default function MahasiswaDashboard({ user, permits, onRefresh }: Mahasis
             <tbody className="divide-y divide-slate-100">
               {filteredPermits.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
-                    Tidak ditemukan data kegiatan.
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <Inbox className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="font-bold text-slate-700 text-xs">Belum ada pengajuan kegiatan.</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Pengajuan yang Anda buat melalui menu &ldquo;Ajukan Izin Baru&rdquo; akan muncul di sini.
+                    </p>
                   </td>
                 </tr>
               ) : (

@@ -49,7 +49,26 @@ export default function LaporanPage() {
 
   const isAdmin = user?.role === 'admin';
 
-  const filteredPermits = permits.filter((p) => {
+  const userPermits = permits.filter((p) => {
+    if (isAdmin) return true;
+    if (!user) return false;
+    const userOrmawa = (user.ormawa_name || '').trim().toLowerCase();
+    const userName = (user.nama || '').trim().toLowerCase();
+    const permitOrmawa = (p.namaormawa || '').trim().toLowerCase();
+    const permitPJ = (p.penanggung_jawab || '').trim().toLowerCase();
+
+    if (userOrmawa && permitOrmawa) {
+      if (permitOrmawa === userOrmawa || permitOrmawa.includes(userOrmawa) || userOrmawa.includes(permitOrmawa)) {
+        return true;
+      }
+    }
+    if (userName && permitPJ && (permitPJ.includes(userName) || userName.includes(permitPJ))) {
+      return true;
+    }
+    return false;
+  });
+
+  const filteredPermits = userPermits.filter((p) => {
     const matchesSearch =
       p.namaormawa.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.namakegiatan.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,11 +78,20 @@ export default function LaporanPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const filteredBalasan = balasanList.filter((b) =>
-    b.namaormawa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.namakegiatan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.keputusan.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredBalasan = balasanList.filter((b) => {
+    if (!isAdmin && user) {
+      const userOrmawa = (user.ormawa_name || '').trim().toLowerCase();
+      const balasanOrmawa = (b.namaormawa || '').trim().toLowerCase();
+      if (userOrmawa && !balasanOrmawa.includes(userOrmawa) && !userOrmawa.includes(balasanOrmawa)) {
+        return false;
+      }
+    }
+    return (
+      b.namaormawa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.namakegiatan.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.keputusan.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const exportCSV = () => {
     const headers = ['ID', 'Nama Ormawa', 'Nama Kegiatan', 'Kategori', 'Tanggal Mulai', 'Tanggal Akhir', 'Anggaran', 'Status', 'Keputusan'];
