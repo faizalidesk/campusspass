@@ -14,36 +14,49 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [role, setRole] = useState<UserRole>('ormawa');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  useEffect(() => {
+  const loadRole = () => {
     const user = getCurrentUser();
     if (user?.role) {
       setRole(user.role);
     }
+  };
+
+  useEffect(() => {
+    loadRole();
+    const handleAuthChange = () => loadRole();
+    window.addEventListener('campuspass_auth_change', handleAuthChange);
+    return () => window.removeEventListener('campuspass_auth_change', handleAuthChange);
   }, []);
 
   return (
-    <div className="page min-h-screen bg-white text-gray-900 flex flex-col font-sans">
-      {/* Top Header Navbar */}
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans selection:bg-[#6666FF] selection:text-white">
+      {/* Sticky Modern Top Header */}
       <Header onToggleSidebar={() => setIsMobileOpen(!isMobileOpen)} />
 
-      {/* Main Content Body */}
-      <div className="isi flex-1 flex flex-col md:flex-row w-full overflow-hidden">
-        {/* Sidebar Desktop */}
-        <div className={`hidden md:block`}>
+      {/* Main Container */}
+      <div className="flex-1 flex w-full">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
           <Sidebar userRole={role} />
         </div>
 
-        {/* Sidebar Mobile Drawer */}
+        {/* Mobile Drawer */}
         {isMobileOpen && (
-          <div className="md:hidden fixed inset-0 z-40 bg-black/40 flex" onClick={() => setIsMobileOpen(false)}>
-            <div className="w-72 bg-white h-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <Sidebar userRole={role} />
+          <div
+            className="lg:hidden fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm flex animate-in fade-in duration-200"
+            onClick={() => setIsMobileOpen(false)}
+          >
+            <div
+              className="w-72 bg-white h-full shadow-2xl animate-in slide-in-from-left duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Sidebar userRole={role} onCloseMobile={() => setIsMobileOpen(false)} />
             </div>
           </div>
         )}
 
-        {/* Right Content Area */}
-        <main className="right flex-1 p-4 lg:p-6 bg-white overflow-y-auto max-h-[calc(100vh-80px)]">
+        {/* Scrollable Content Body */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-x-hidden">
           {children}
         </main>
       </div>

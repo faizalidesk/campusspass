@@ -3,14 +3,25 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { setCurrentUser } from '@/lib/dataStore';
+import { setCurrentUser, DEFAULT_ADMIN, DEFAULT_ORMAWA } from '@/lib/dataStore';
 import { UserRole } from '@/types';
+import {
+  ShieldCheck,
+  GraduationCap,
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  Lock,
+  User,
+  Building2,
+  FileCheck2
+} from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
-  const [role, setRole] = useState<UserRole>('admin');
+  const [username, setUsername] = useState('himatif');
+  const [password, setPassword] = useState('password123');
+  const [role, setRole] = useState<UserRole>('ormawa');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -20,177 +31,214 @@ export default function LoginPage() {
     setTimeout(() => {
       if (role === 'admin') {
         setCurrentUser({
-          id: '1',
-          nama: 'Heri - Humas Polindra',
+          ...DEFAULT_ADMIN,
           username: username || 'admin',
-          role: 'admin',
         });
       } else {
         setCurrentUser({
-          id: '2',
-          nama: 'Faiz Ali (HIMATIF)',
-          username: username || 'user',
-          role: 'ormawa',
-          ormawa_name: 'Himpunan Mahasiswa Teknik Informatika',
+          ...DEFAULT_ORMAWA,
+          username: username || 'himatif',
         });
       }
       setIsLoading(false);
       router.push('/dashboard');
-    }, 400);
+    }, 450);
   };
 
-  const setPreset = (selectedRole: UserRole) => {
-    setRole(selectedRole);
-    if (selectedRole === 'admin') {
+  const selectRole = (newRole: UserRole) => {
+    setRole(newRole);
+    if (newRole === 'admin') {
       setUsername('admin');
       setPassword('admin123');
     } else {
-      setUsername('user');
-      setPassword('user123');
+      setUsername('himatif');
+      setPassword('himatif123');
     }
   };
 
   return (
-    <div className="page w-full min-h-screen bg-white flex flex-col md:flex-row font-sans overflow-hidden">
-      {/* Left 50% Banner Section */}
-      <div className="page1 w-full md:w-1/2 min-h-[400px] md:min-h-screen bg-[rgb(32,103,255)] md:rounded-r-[120px] lg:rounded-r-[220px] p-6 lg:p-12 text-white flex flex-col justify-between shadow-2xl relative">
-        <div>
-          {/* Header Polindra */}
-          <div className="judul flex items-center gap-3">
-            <Image
-              src="/img/logopolindra.png"
-              alt="Logo Polindra"
-              width={65}
-              height={65}
-              className="object-contain drop-shadow-md"
-              priority
-            />
-            <h3 className="text-xl lg:text-2xl font-bold tracking-tight">
-              Politeknik Negeri Indramayu
-            </h3>
+    <div className="min-h-screen w-full bg-[#F8FAFC] flex flex-col md:flex-row font-sans selection:bg-[#6666FF] selection:text-white">
+      {/* Left 50%: SaaS Brand Hero Presentation */}
+      <div className="w-full md:w-1/2 min-h-[460px] md:min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-blue-950 p-8 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden shadow-2xl">
+        {/* Glow Spheres */}
+        <div className="absolute -left-20 -top-20 w-96 h-96 bg-[#6666FF]/25 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute right-0 bottom-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+        {/* Brand Header */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3.5">
+            <div className="relative w-12 h-12 flex-shrink-0 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+              <Image
+                src="/img/logopolindra.png"
+                alt="Logo Polindra"
+                width={48}
+                height={48}
+                className="object-contain"
+                priority
+              />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold tracking-tight text-white leading-none">
+                Politeknik Negeri Indramayu
+              </h2>
+              <span className="text-xs text-indigo-300 font-semibold tracking-wider uppercase">
+                Student Affairs &amp; Activity Tracker
+              </span>
+            </div>
           </div>
 
-          <div className="mt-12 lg:mt-20">
-            <h2 className="text-4xl lg:text-6xl font-extrabold leading-tight">
-              Student affairs <br />
-              <span className="text-[#FA8072]">CampusPass</span>
-            </h2>
-            <div className="mt-8 max-w-xl text-blue-100 text-sm lg:text-base leading-relaxed text-justify bg-blue-700/30 p-5 rounded-2xl backdrop-blur-sm border border-blue-400/20">
-              <span className="text-[#FA8072] font-bold block text-lg mb-2">
-                Information Detail
+          <div className="mt-14 lg:mt-24 max-w-lg">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-indigo-200 text-xs font-bold border border-white/15 mb-4">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>CampusPass v2.4 SaaS Edition</span>
+            </div>
+            <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+              Sistem Terpadu <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6666FF] via-indigo-300 to-[#FA8072]">
+                Perizinan &amp; Anggaran
               </span>
-              Selamat datang di portal perizinan dan tracking kegiatan organisasi mahasiswa Politeknik Negeri Indramayu. Melalui sistem ini, seluruh proses pengajuan proposal, dokumen RAB, izin fasilitas, serta pelaporan kegiatan dapat dikelola secara transparan, terpusat, dan efisien.
+            </h1>
+            <p className="mt-4 text-sm text-slate-300 leading-relaxed text-justify">
+              Platform modern pengelolaan pengajuan izin kegiatan, peninjauan dokumen anggaran (RAB), peminjaman fasilitas ruangan, dan penerbitan surat keputusan resmi secara transparan &amp; akuntabel.
+            </p>
+
+            {/* Feature Highlights */}
+            <div className="mt-8 space-y-2.5 text-xs text-slate-200">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>Pengajuan Izin Kegiatan Online dengan Pratinjau Langsung (Live Preview)</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>Validasi Cepat &amp; Penerbitan Surat Keputusan oleh Humas &amp; Kemahasiswaan</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>Terintegrasi Database Cloud Real-time dengan Fitur Ekspor Rekapitulasi CSV</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="text-xs text-blue-200 mt-6">
-          &copy; {new Date().getFullYear()} Politeknik Negeri Indramayu &bull; CampusPass
+        {/* Footer info */}
+        <div className="relative z-10 text-xs text-slate-400 mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-2">
+          <span>&copy; {new Date().getFullYear()} Politeknik Negeri Indramayu</span>
+          <span>Dikelola oleh Bagian Kemahasiswaan &amp; Humas</span>
         </div>
       </div>
 
-      {/* Right 50% Form Section */}
-      <div className="page2 w-full md:w-1/2 flex flex-col justify-center items-center p-6 lg:p-12">
-        <div className="w-full max-w-md text-center">
-          {/* Top Logo & Headings */}
-          <div className="form flex flex-col items-center mb-6">
-            <Image
-              src="/img/logopolindra.png"
-              alt="Polindra"
-              width={110}
-              height={110}
-              className="object-contain mb-3 drop-shadow"
-            />
-            <p className="text-sm font-extrabold text-gray-800">
-              Pengajuan izin dan pelaporan kegiatan Organisasi Mahasiswa
-            </p>
-            <p className="text-xs font-semibold text-gray-500 mt-1">
-              Politeknik Negeri Indramayu ({role === 'admin' ? 'Admin Humas' : 'User Ormawa'})
+      {/* Right 50%: Modern Login Form */}
+      <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 lg:p-16">
+        <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-100">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Selamat Datang</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Silakan pilih portal masuk Anda untuk melanjutkan
             </p>
 
             {/* Role Switcher Pill */}
-            <div className="mt-4 flex bg-gray-100 p-1 rounded-xl border border-gray-200 w-full max-w-xs">
+            <div className="mt-5 grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl">
               <button
                 type="button"
-                onClick={() => setPreset('admin')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
-                  role === 'admin'
-                    ? 'bg-[#6666FF] text-white shadow'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Login Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreset('ormawa')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                onClick={() => selectRole('ormawa')}
+                className={`py-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
                   role === 'ormawa'
-                    ? 'bg-[#6666FF] text-white shadow'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-[#6666FF] shadow-sm font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Login Ormawa
+                <GraduationCap className="w-4 h-4" />
+                <span>Login Mahasiswa</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => selectRole('admin')}
+                className={`py-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  role === 'admin'
+                    ? 'bg-white text-[#6666FF] shadow-sm font-extrabold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Login Admin Humas</span>
               </button>
             </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleLogin} className="flex flex-col gap-3">
+          {/* Login Form */}
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="w-full h-11 px-4 rounded-xl border-2 border-black bg-white text-center text-sm font-medium focus:outline-none focus:border-[#6666FF] transition"
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full h-11 px-4 rounded-xl border-2 border-black bg-white text-center text-sm font-medium focus:outline-none focus:border-[#6666FF] transition"
-              />
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                Username / Identitas Ormawa
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder={role === 'admin' ? 'admin' : 'himatif / bem / ormawa'}
+                  className="w-full pl-10 pr-4 h-11 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#6666FF] transition"
+                />
+              </div>
             </div>
 
-            <div className="lupa flex justify-between items-center text-xs text-gray-600 my-1 px-1">
-              <a href="#" className="hover:text-[#6666FF] hover:underline">
-                Lupa password?
-              </a>
-              <p>
-                Belum punya akun?{' '}
-                <button
-                  type="button"
-                  onClick={() => setPreset(role === 'admin' ? 'ormawa' : 'admin')}
-                  className="text-[#6666FF] font-bold hover:underline"
-                >
-                  Bikin Yuk
-                </button>
-              </p>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-xs font-bold text-slate-700">Password / Kata Sandi</label>
+                <a href="#" className="text-[11px] font-semibold text-[#6666FF] hover:underline">
+                  Lupa kata sandi?
+                </a>
+              </div>
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 h-11 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#6666FF] transition"
+                />
+              </div>
             </div>
 
-            {/* Gradient Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-11 rounded-xl font-bold text-white text-sm bg-gradient-to-r from-[rgb(36,221,253)] to-[rgb(0,60,255)] hover:from-[rgb(0,60,255)] hover:to-[rgb(36,221,253)] transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center"
-            >
-              {isLoading ? 'Memproses...' : 'Submit / Masuk'}
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#6666FF] via-indigo-600 to-blue-600 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>{isLoading ? 'Mengautentikasi...' : `Masuk ke Portal ${role === 'admin' ? 'Admin Humas' : 'Mahasiswa'}`}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </form>
 
-          {/* Social Icons Placeholders (Original Aesthetic) */}
-          <div className="other flex justify-between items-center gap-3 mt-6">
-            <div className="google flex-1 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center cursor-pointer hover:bg-gray-50 transition">
-              <span className="text-xs font-bold text-gray-700">Google SSO</span>
-            </div>
-            <div className="apple flex-1 h-11 rounded-xl border-2 border-black bg-white flex items-center justify-center cursor-pointer hover:bg-gray-50 transition">
-              <span className="text-xs font-bold text-gray-700">Apple ID</span>
+          {/* Preset 1-Click Demo Accounts */}
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+              Akun Demo Cepat (1-Klik)
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => selectRole('ormawa')}
+                className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 text-left transition cursor-pointer"
+              >
+                <div className="text-[11px] font-bold text-slate-800">👤 Mahasiswa HIMATIF</div>
+                <div className="text-[10px] text-slate-500">himatif / himatif123</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => selectRole('admin')}
+                className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 text-left transition cursor-pointer"
+              >
+                <div className="text-[11px] font-bold text-slate-800">🏢 Humas Polindra</div>
+                <div className="text-[10px] text-slate-500">admin / admin123</div>
+              </button>
             </div>
           </div>
         </div>
