@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { setCurrentUser, DEFAULT_ADMIN, DEFAULT_ORMAWA } from '@/lib/dataStore';
+import { loginUser } from '@/lib/dataStore';
 import { UserRole } from '@/types';
 import {
   ShieldCheck,
@@ -13,40 +14,40 @@ import {
   CheckCircle2,
   Lock,
   User,
-  Building2,
-  FileCheck2
+  AlertCircle
 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState('himatif');
-  const [password, setPassword] = useState('password123');
+  const [password, setPassword] = useState('himatif123');
   const [role, setRole] = useState<UserRole>('ormawa');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
 
-    setTimeout(() => {
-      if (role === 'admin') {
-        setCurrentUser({
-          ...DEFAULT_ADMIN,
-          username: username || 'admin',
-        });
-      } else {
-        setCurrentUser({
-          ...DEFAULT_ORMAWA,
-          username: username || 'himatif',
-        });
-      }
-      setIsLoading(false);
-      router.push('/dashboard');
-    }, 450);
+    const result = await loginUser(username, password, role);
+    setIsLoading(false);
+
+    if (result.success) {
+      setSuccessMessage('Login berhasil! Mengarahkan ke dashboard...');
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 700);
+    } else {
+      setErrorMessage(result.error || 'Username atau password salah.');
+    }
   };
 
   const selectRole = (newRole: UserRole) => {
     setRole(newRole);
+    setErrorMessage('');
     if (newRole === 'admin') {
       setUsername('admin');
       setPassword('admin123');
@@ -90,7 +91,7 @@ export default function LoginPage() {
           <div className="mt-14 lg:mt-24 max-w-lg">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-indigo-200 text-xs font-bold border border-white/15 mb-4">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>CampusPass v2.4 SaaS Edition</span>
+              <span>CampusPass v2.4 Database Edition</span>
             </div>
             <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tight leading-tight">
               Sistem Terpadu <br />
@@ -114,7 +115,7 @@ export default function LoginPage() {
               </div>
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <span>Terintegrasi Database Cloud Real-time dengan Fitur Ekspor Rekapitulasi CSV</span>
+                <span>Terintegrasi Database Cloud Supabase Real-time</span>
               </div>
             </div>
           </div>
@@ -166,11 +167,26 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Error / Success Alerts */}
+          {errorMessage && (
+            <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+
           {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                Username / Identitas Ormawa
+                Username Akun
               </label>
               <div className="relative">
                 <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -211,16 +227,24 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#6666FF] via-indigo-600 to-blue-600 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>{isLoading ? 'Mengautentikasi...' : `Masuk ke Portal ${role === 'admin' ? 'Admin Humas' : 'Mahasiswa'}`}</span>
+                <span>{isLoading ? 'Memverifikasi Database...' : `Masuk ke Portal ${role === 'admin' ? 'Admin Humas' : 'Mahasiswa'}`}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </form>
 
+          {/* Link to Register */}
+          <div className="mt-5 text-center text-xs text-slate-600">
+            Belum memiliki akun ormawa?{' '}
+            <Link href="/register" className="font-bold text-[#6666FF] hover:underline">
+              Daftar Sekarang
+            </Link>
+          </div>
+
           {/* Preset 1-Click Demo Accounts */}
           <div className="mt-6 pt-5 border-t border-slate-100 text-center">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
-              Akun Demo Cepat (1-Klik)
+              Akun Cepat (1-Klik)
             </span>
             <div className="grid grid-cols-2 gap-2">
               <button

@@ -9,6 +9,8 @@ export interface User {
   email?: string;
   avatar?: string;
   department?: string;
+  password?: string;
+  created_at?: string;
 }
 
 export interface PermitApplication {

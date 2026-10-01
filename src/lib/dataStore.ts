@@ -1,6 +1,56 @@
 import { PermitApplication, Balasan, User, ActivityLog } from '@/types';
 import { supabase, isSupabaseConfigured } from './supabase';
 
+export const INITIAL_USERS: User[] = [
+  {
+    id: 'admin-1',
+    nama: 'Heri Susanto, S.ST., M.T.',
+    username: 'admin',
+    password: 'admin123',
+    role: 'admin',
+    email: 'humas@polindra.ac.id',
+    department: 'Bagian Kemahasiswaan & Hubungan Masyarakat',
+    avatar: 'HM',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'ormawa-1',
+    nama: 'Faiz Ali',
+    username: 'himatif',
+    password: 'himatif123',
+    role: 'ormawa',
+    ormawa_name: 'Himpunan Mahasiswa Teknik Informatika (HIMATIF)',
+    email: 'himatif@polindra.ac.id',
+    department: 'Jurusan Teknik Informatika',
+    avatar: 'OM',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'ormawa-2',
+    nama: 'M. Rizky Pratama',
+    username: 'bem',
+    password: 'bem123',
+    role: 'ormawa',
+    ormawa_name: 'Badan Eksekutif Mahasiswa (BEM)',
+    email: 'bem@polindra.ac.id',
+    department: 'Organisasi Mahasiswa',
+    avatar: 'OM',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'ormawa-3',
+    nama: 'Siti Nurhaliza',
+    username: 'sebura',
+    password: 'sebura123',
+    role: 'ormawa',
+    ormawa_name: 'Unit Kegiatan Mahasiswa Seni Budaya (SEBURA)',
+    email: 'sebura@polindra.ac.id',
+    department: 'UKM Kesenian',
+    avatar: 'OM',
+    created_at: new Date().toISOString()
+  }
+];
+
 export const INITIAL_PERMITS: PermitApplication[] = [
   {
     id: '1',
@@ -53,23 +103,6 @@ export const INITIAL_PERMITS: PermitApplication[] = [
   },
   {
     id: '4',
-    namaormawa: 'Himpunan Mahasiswa Refrigerasi & Tata Udara (HIMRA)',
-    namakegiatan: 'Eco-Cooling Summit & Dies Natalis HIMRA',
-    mulai: '20 Mei 2026',
-    akhir: '22 Mei 2026',
-    undangan: 'Civitas Akademika Polindra',
-    rab: 'RAB_HimraMilad.pdf',
-    deskripsi: 'Seminar teknologi pendingin ramah lingkungan dan pameran sistem HVAC hemat energi karya mahasiswa.',
-    kategori: 'Akademik',
-    anggaran: 'Rp 9.800.000',
-    lokasi: 'Aula Lantai 3 Gedung Rektorat',
-    penanggung_jawab: 'Dimas Aditya',
-    status: 'disetujui',
-    keputusan: 'Disetujui. Harap memastikan kebersihan ruangan aula setelah kegiatan berlangsung.',
-    created_at: '2026-04-28T09:00:00Z',
-  },
-  {
-    id: '5',
     namaormawa: 'Unit Kegiatan Mahasiswa Seni Budaya (SEBURA)',
     namakegiatan: 'Festival Tari Tradisional & Pentas Gelar Budaya',
     mulai: '10 Juni 2026',
@@ -100,16 +133,6 @@ export const INITIAL_BALASAN: Balasan[] = [
   },
   {
     id: '2',
-    namaormawa: 'Himpunan Mahasiswa Refrigerasi & Tata Udara (HIMRA)',
-    namakegiatan: 'Eco-Cooling Summit & Dies Natalis HIMRA',
-    mulai: '20 Mei 2026',
-    akhir: '22 Mei 2026',
-    status: 'disetujui',
-    keputusan: 'Disetujui. Harap memastikan kebersihan ruangan aula setelah kegiatan berlangsung.',
-    created_at: '2026-04-29T14:30:00Z'
-  },
-  {
-    id: '3',
     namaormawa: 'Unit Kegiatan Mahasiswa Seni Budaya (SEBURA)',
     namakegiatan: 'Festival Tari Tradisional & Pentas Gelar Budaya',
     mulai: '10 Juni 2026',
@@ -120,28 +143,13 @@ export const INITIAL_BALASAN: Balasan[] = [
   }
 ];
 
-export const DEFAULT_ADMIN: User = {
-  id: 'admin-1',
-  nama: 'Heri Susanto, S.ST., M.T.',
-  username: 'admin',
-  role: 'admin',
-  email: 'humas@polindra.ac.id',
-  department: 'Bagian Kemahasiswaan & Hubungan Masyarakat',
-};
-
-export const DEFAULT_ORMAWA: User = {
-  id: 'ormawa-1',
-  nama: 'Faiz Ali',
-  username: 'himatif',
-  role: 'ormawa',
-  ormawa_name: 'Himpunan Mahasiswa Teknik Informatika (HIMATIF)',
-  email: 'himatif@polindra.ac.id',
-  department: 'Jurusan Teknik Informatika',
-};
+export const DEFAULT_ADMIN: User = INITIAL_USERS[0];
+export const DEFAULT_ORMAWA: User = INITIAL_USERS[1];
 
 const STORAGE_KEY_PERMITS = 'campuspass_permits';
 const STORAGE_KEY_BALASAN = 'campuspass_balasan';
 const STORAGE_KEY_USER = 'campuspass_current_user';
+const STORAGE_KEY_USERS_DB = 'campuspass_users_db';
 const STORAGE_KEY_LOGS = 'campuspass_activity_logs';
 
 export function getCurrentUser(): User | null {
@@ -173,6 +181,196 @@ export function setCurrentUser(user: User | null) {
 export function logout() {
   setCurrentUser(null);
 }
+
+// -------------------------------------------------------------
+// USER AUTHENTICATION (SUPABASE + LOCALSTORAGE DATABASE)
+// -------------------------------------------------------------
+
+export async function loginUser(
+  username: string,
+  password: string,
+  role: 'admin' | 'ormawa'
+): Promise<{ success: boolean; user?: User; error?: string }> {
+  const cleanUsername = username.trim().toLowerCase();
+
+  // 1. Try Supabase users table
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', cleanUsername)
+        .eq('role', role)
+        .maybeSingle();
+
+      if (!error && data) {
+        if (data.password === password) {
+          const authenticatedUser: User = {
+            id: data.id,
+            nama: data.nama,
+            username: data.username,
+            role: data.role,
+            email: data.email,
+            ormawa_name: data.ormawa_name,
+            department: data.department,
+            avatar: data.role === 'admin' ? 'HM' : 'OM',
+            created_at: data.created_at,
+          };
+          setCurrentUser(authenticatedUser);
+          return { success: true, user: authenticatedUser };
+        } else {
+          return { success: false, error: 'Password yang Anda masukkan salah!' };
+        }
+      }
+    } catch (e) {
+      console.warn('Supabase login check fallback', e);
+    }
+  }
+
+  // 2. Fallback to Local Storage Database
+  let localUsers: User[] = INITIAL_USERS;
+  if (typeof window !== 'undefined') {
+    const raw = localStorage.getItem(STORAGE_KEY_USERS_DB);
+    if (raw) {
+      try {
+        localUsers = JSON.parse(raw);
+      } catch {}
+    }
+  }
+
+  const found = localUsers.find(
+    (u) => u.username.toLowerCase() === cleanUsername && u.role === role
+  );
+
+  if (!found) {
+    return {
+      success: false,
+      error: `Akun ${cleanUsername} dengan role ${role === 'admin' ? 'Admin' : 'Mahasiswa'} tidak ditemukan!`,
+    };
+  }
+
+  if (found.password && found.password !== password) {
+    return { success: false, error: 'Password yang Anda masukkan salah!' };
+  }
+
+  setCurrentUser(found);
+  return { success: true, user: found };
+}
+
+export async function registerUser(
+  newUser: Omit<User, 'id' | 'created_at'>
+): Promise<{ success: boolean; user?: User; error?: string }> {
+  const cleanUsername = newUser.username.trim().toLowerCase();
+  const cleanEmail = newUser.email ? newUser.email.trim().toLowerCase() : '';
+
+  // 1. Check if user already exists in Supabase
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id, username, email')
+        .or(`username.eq.${cleanUsername},email.eq.${cleanEmail}`)
+        .maybeSingle();
+
+      if (existingUser) {
+        return {
+          success: false,
+          error: 'Username atau Email ini sudah terdaftar di sistem!',
+        };
+      }
+
+      // Insert into Supabase
+      const { data: inserted, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          username: cleanUsername,
+          password: newUser.password || 'password123',
+          nama: newUser.nama,
+          email: cleanEmail,
+          role: newUser.role,
+          ormawa_name: newUser.ormawa_name || null,
+          department: newUser.department || null,
+          avatar_initials: newUser.role === 'admin' ? 'HM' : 'OM',
+        })
+        .select()
+        .single();
+
+      if (!insertError && inserted) {
+        const registeredUser: User = {
+          id: inserted.id,
+          nama: inserted.nama,
+          username: inserted.username,
+          role: inserted.role,
+          email: inserted.email,
+          ormawa_name: inserted.ormawa_name,
+          department: inserted.department,
+          avatar: inserted.role === 'admin' ? 'HM' : 'OM',
+          created_at: inserted.created_at,
+        };
+        setCurrentUser(registeredUser);
+        saveLocalUser(registeredUser);
+        return { success: true, user: registeredUser };
+      }
+    } catch (e) {
+      console.warn('Supabase register fallback', e);
+    }
+  }
+
+  // 2. Fallback to Local Storage DB
+  let localUsers: User[] = INITIAL_USERS;
+  if (typeof window !== 'undefined') {
+    const raw = localStorage.getItem(STORAGE_KEY_USERS_DB);
+    if (raw) {
+      try {
+        localUsers = JSON.parse(raw);
+      } catch {}
+    }
+  }
+
+  const existingLocal = localUsers.find(
+    (u) =>
+      u.username.toLowerCase() === cleanUsername ||
+      (cleanEmail && u.email?.toLowerCase() === cleanEmail)
+  );
+
+  if (existingLocal) {
+    return {
+      success: false,
+      error: 'Username atau Email ini sudah terdaftar!',
+    };
+  }
+
+  const createdUser: User = {
+    ...newUser,
+    id: 'user-' + Date.now(),
+    username: cleanUsername,
+    email: cleanEmail,
+    avatar: newUser.role === 'admin' ? 'HM' : 'OM',
+    created_at: new Date().toISOString(),
+  };
+
+  saveLocalUser(createdUser);
+  setCurrentUser(createdUser);
+
+  return { success: true, user: createdUser };
+}
+
+function saveLocalUser(user: User) {
+  if (typeof window === 'undefined') return;
+  let localUsers: User[] = INITIAL_USERS;
+  const raw = localStorage.getItem(STORAGE_KEY_USERS_DB);
+  if (raw) {
+    try {
+      localUsers = JSON.parse(raw);
+    } catch {}
+  }
+  const updated = [user, ...localUsers.filter((u) => u.username !== user.username)];
+  localStorage.setItem(STORAGE_KEY_USERS_DB, JSON.stringify(updated));
+}
+
+// -------------------------------------------------------------
+// PERMITS & REVIEWS DATA LAYER
+// -------------------------------------------------------------
 
 export async function getPermits(): Promise<PermitApplication[]> {
   if (isSupabaseConfigured && supabase) {
@@ -242,6 +440,10 @@ export async function addPermit(permit: Omit<PermitApplication, 'id' | 'status' 
         open_invitation: permit.undangan,
         rab_url: permit.rab,
         description: permit.deskripsi,
+        kategori: permit.kategori || 'Organisasi',
+        anggaran: permit.anggaran || 'Rp 5.000.000',
+        lokasi: permit.lokasi || 'Kampus Polindra',
+        penanggung_jawab: permit.penanggung_jawab || 'Ketua Pelaksana',
         feedback_notes: null,
         status: 'pending'
       });
